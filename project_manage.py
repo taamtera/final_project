@@ -54,15 +54,26 @@ def admin():
 def get_project():
     unip = ''
     new= True
-    if user['type'] == 'admin':
-        string = """Select a project to work on by "name" or "ID" or enter "admin" for admin mode."""
+    if user['type'] == 'admin' or user['type'] == 'faculty':
+        if user['type'] == 'admin':
+            string = """Select a project to work on by "name" or "ID" or enter "admin" for admin mode."""
+        else:
+            string = """Select a project to work on by "name" or "ID"."""
         print(line(len(string)))
         print(string)
         print(line(len(string)))
+        if db.select('projects',where={'advisor': user['ID']}) is not None:
+            print('Your Student\'s projects: ')
+            db.select('projects',where={'advisor': user['ID']}).select(['ID', 'name', 'project_data', 'stage']).print()
+            print(line(len(string)))
+        elif user['type'] == 'faculty':
+            print('You have no assigned projects.')
+            print(line(len(string)))
+        print('All projects: ')
         db.select('projects').select(['ID', 'name', 'project_data', 'stage']).print()
         print(line(len(string)))
         unip = uinput()
-        if unip == 'admin':
+        if unip == 'admin' and user['type'] == 'admin':
             admin()
             return None
     else:
@@ -83,11 +94,6 @@ def get_project():
             if db.select('projects',where={'member2': user['ID']}) is not None:
                 db.select('projects',where={'member2': user['ID']}).select(['ID', 'name', 'project_data', 'stage']).print()
             print(line(len(string)))
-        if db.select('projects',where={'advisor': user['ID']}) is not None:
-            new = False
-            print('Your Student\'s projects: ')
-            db.select('projects',where={'advisor': user['ID']}).select(['ID', 'name', 'project_data', 'stage']).print()
-            print(line(len(string)))
         if new:
             unip = uinput('You have no projects. type "New" to make a new project: ')
         else:
@@ -99,7 +105,7 @@ def get_project():
     project_id = db.select('projects', where={'ID': unip}) or db.select('projects', where={'name': unip})
     if project_id is not None:
         edit_project(project_id)
-    elif unip == 'new':
+    elif unip == 'new' and user['type'] == 'student':
         create_project()
 
 def edit_project(project_id):
@@ -123,11 +129,21 @@ def edit_project(project_id):
             print("Your Student's projects: " + advisor.table[0]['fist'] + ' ' + advisor.table[0]['last'])
         string = 'what would you like to do with this project: '
         print(line(len(string)))
+        if project.table[0]['stage'] == 'finished':
+            print('This project is finished.')
+            uinput('Enter to go back: ')
+            return None
         if project.table[0]['head'] == user['ID'] or user['type'] == 'admin':
-            print('"1" Edit project data')
+            if project.table[0]['stage'] == 'draft':
+                print('"1" Edit project data')
+            elif project.table[0]['stage'] == 'accepted':
+                print('"1" Edit Report')
             print('"2" Invite member')
             print('"3" Request advisor')
-            print('"4" submit project')
+            if project.table[0]['stage'] == 'draft':
+                print('"4" Submit project')
+            elif project.table[0]['stage'] == 'accepted':
+                print('"4" Submit Report')
             print('"5" Delete project')
         elif project.table[0]['advisor'] == user['ID']:
             print('"5" abandon your studetns')
@@ -142,17 +158,18 @@ def edit_project(project_id):
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
         match unip:
             case '1':
-                project.upsert({'project_data': uinput('Enter new project data: ')})
+                if project.table[0]['stage'] == 'draft':
+                    project.upsert({'project_data': uinput('Enter new project data: ')})
+                else:
+                    project.upsert({'project_data': uinput('Enter new report_data: ')})
                 db.write('projects.csv')
             case '2':
                 print('Enter the ID of the person you would like to invite.')
                 db.select('persons',where={'type': 'student'}).select(['ID', 'fist', 'last']).print()
                 unip = uinput()
                 if db.select('persons', where={'ID': unip}) is not None:
-                    if project.table[0]['member1'] == '':
-                        send_request(project, unip, 'member1')
-                    elif project.table[0]['member2'] == '':
-                        send_request(project, unip, 'member2')
+                    if project.table[0]['member2'] == '' or project.table[0]['member1'] == '':
+                        send_request(project, unip, 'member')
                     else:
                         uinput('This project is full.')
                 else:
@@ -168,12 +185,16 @@ def edit_project(project_id):
             case '4':
                 if project.table[0]['advisor'] is '':
                     uinput('You need to request an advisor first.')
-                else:
-                    send_request(project.table[0]['ID'], project.table[0]['advisor'], 'submit')
+                    continue
+                elif project.table[0]['stage'] == 'draft':
+                    send_request(project, project.table[0]['advisor'], 'submit')
                     project.upsert({'stage': 'submitted'})
-                    uinput('Project submitted.')
+                elif project.table[0]['stage'] == 'accepted':
+                    send_request(project, project.table[0]['advisor'], 'submitreport')
+                    project.upsert({'stage': 'submittedreport'})
+                db.write('projects.csv')
             case '5':
-                if project.table[0]['head'] != user['ID']:
+                if project.table[0]['head'] != user['ID'] and user['type'] != 'admin':
                     project.upsert({'advisor': None}, where={'advisor': user['ID']})
                     project.upsert({'member1': None}, where={'member1': user['ID']})
                     project.upsert({'member2': None}, where={'member2': user['ID']})
@@ -182,7 +203,8 @@ def edit_project(project_id):
                 project.select(['ID', 'name', 'project_data', 'stage']).print()
                 string = uinput('Are you sure you want to delete this project? enter the id of the project to confirm:')
                 if string == project.table[0]['ID']:
-                    db.select('projects').drop(where={'ID': project_id.table[0]['ID']})
+                    db.select('projects').drop(where={'ID': project.table[0]['ID']})
+                    db.write('projects.csv')
                     return None
             case 'back':
                 return None
@@ -191,7 +213,8 @@ def create_project():
     # ID,name,head,member1,member2,advisor,project_data
     os.system('cls' if os.name == 'nt' else "printf '\033c'")
     data = {'ID': rnd_id(), 'name': uinput('Enter project name: '), 'head': user['ID'], 'member1': None, 'member2': None, 'advisor': None, 'project_data': uinput('Enter project data: '),'stage': 'draft'}
-    db.select('projects').upsert(data).write('projects.csv')
+    db.select('projects').upsert(data)
+    db.write('projects.csv')
 
 def get_request():
     requests = db.select('requests', where={'ID': user['ID']})
@@ -201,25 +224,34 @@ def get_request():
         print('You have ' + str(len(requests)) + ' requests.')
         for request in requests.table:
             print('{Project: "' + request['project_name'] + '" type: "' + request['type'] +'"}')
-            print('Enter "accept" to accept the request or "decline" to decline it.')
+            string = 'Enter "accept" to accept the request or "decline" to decline it.'
+            print(line(len(string)))
+            print(string)
             unip = uinput()
             if unip == 'accept':
-                if request['type'] == 'member1':
-                    db.select('projects').upsert({'member1': user['ID']}, where={'ID': request['project']})
-                elif request['type'] == 'member2':
-                    db.select('projects').upsert({'member2': user['ID']}, where={'ID': request['project']})
+                if request['type'] == 'member':
+                    print('none')
+                    if db.select('projects', where={'ID': request['project']}).table[0]['member1'] is '':
+                        print("yesss")
+                        db.select('projects').upsert({'member1': user['ID']}, where={'ID': request['project']})
+                    elif db.select('projects', where={'ID': request['project']}).table[0]['member2'] is '':
+                        db.select('projects').upsert({'member2': user['ID']}, where={'ID': request['project']})
                 elif request['type'] == 'advisor':
                     db.select('projects').upsert({'advisor': user['ID']}, where={'ID': request['project']})
                 elif request['type'] == 'submit':
                     db.select('projects').upsert({'stage': 'accepted'}, where={'ID': request['project']})
+                elif request['type'] == 'submitreport':
+                    db.select('projects').upsert({'stage': 'finished'}, where={'ID': request['project']})
                 db.select('requests').drop(where={'ID': user['ID'], 'project': request['project']})
-                print('Request accepted.\n')
+                print('Request accepted.')
                 db.write('projects.csv').write('requests.csv')
             elif unip == 'decline':
                 if request['type'] == 'submit':
                     db.select('projects').upsert({'stage': 'draft'}, where={'ID': request['project']})
+                elif request['type'] == 'submitreport':
+                    db.select('projects').upsert({'stage': 'accepted'}, where={'ID': request['project']})
                 db.select('requests').drop(where={'ID': user['ID'], 'project': request['project']})
-                print('Request declined.\n')
+                uinput('Request declined.')
                 db.write('projects.csv').write('requests.csv')
     return None
 
@@ -238,22 +270,23 @@ def uinput(string = ''):
     unip = input(string).lower()
     if unip == 'exit':
         exit()
+    elif unip == 'logout':
+        main()
+        return
     return unip
 
 def login():
     # ask the user to enter the username and password 3 times
     for _ in range(3):
-        # username = uinput("Enter username: ")
-        # password = uinput("Enter password: ",clear=true)
-        username = 'Taam.P'
-        password = '1234'
+        username = input("Enter username: ")
+        password = input("Enter password: ")
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
         # check if the user id exists and the password matches
-        login_id = db.select('login', where={'username': username, 'password': password})
-        if login_id:
-            return login_id.table[0]['ID']
+        if db.select('login', where={'username': username, 'password': password}) is not None:
+            return db.select('login', where={'username': username, 'password': password}).table[0]['ID']
         print('Login failed. Please try again.')
-    print('You have exceeded the maximum number of tries. Please try again later.')
+    uinput('You have exceeded the maximum number of tries. Please try again later.')
+    exit()
     return None
 
 def exit():
@@ -265,6 +298,7 @@ def exit():
     sys.exit()
 
 def main():
+    os.system('cls' if os.name == 'nt' else "printf '\033c'")
     # make calls to the initializing and login functions defined above
     initializing()
     user_id = login()
@@ -276,7 +310,7 @@ def main():
     while True:
         initializing()
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
-        string = 'Welcome '+ user['type'] + " " + user['fist'] + ' ' + user['last'] + '. type "exit" to exit.'
+        string = 'Welcome '+ user['type'] + " " + user['fist'] + ' ' + user['last'] + '. "exit" to exit. "logout" to relog'
         print( '\n' + line(len(string)))
         print(string)
         print(line(len(string)))
