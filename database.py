@@ -50,7 +50,7 @@ class DB:
         for table in self.database:
             if table.table_name == table_name:
                 if where is not None:
-                    table = table.filter(lambda item: all(item[key] == where[key] for key in where))
+                    table = table.filter(lambda item: all(item[key].lower() == where[key] for key in where))
                 if table is not None and columns is not None:
                     table = table.select(columns)
                 return table

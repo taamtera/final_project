@@ -120,10 +120,10 @@ def edit_project(project_id):
         print('project head: ' + head.table[0]['fist'] + ' ' + head.table[0]['last'])
         member1 = db.select('persons', where={'ID': project.table[0]['member1']})
         if member1 is not None:
-            print('project member1: ' + member1.table[0]['fist'] + ' ' + member1.table[0]['last'])
+            print('project member 1: ' + member1.table[0]['fist'] + ' ' + member1.table[0]['last'])
             member2 = db.select('persons', where={'ID': project.table[0]['member2']})
             if member2 is not None:
-                print('project member2: ' + member2.table[0]['fist'] + ' ' + member2.table[0]['last'])
+                print('project member 2: ' + member2.table[0]['fist'] + ' ' + member2.table[0]['last'])
         advisor = db.select('persons', where={'ID': project.table[0]['advisor']})
         if advisor is not None:
             print("Your Student's projects: " + advisor.table[0]['fist'] + ' ' + advisor.table[0]['last'])
@@ -133,19 +133,28 @@ def edit_project(project_id):
             print('This project is finished.')
             uinput('Enter to go back: ')
             return None
+        cmd = []
         if project.table[0]['head'] == user['ID'] or user['type'] == 'admin':
             if project.table[0]['stage'] == 'draft':
+                cmd.append('1')
                 print('"1" Edit project data')
             elif project.table[0]['stage'] == 'accepted':
+                cmd.append('1')
                 print('"1" Edit Report')
-            print('"2" Invite member')
+            cmd.append('2')  
+            print('"2" Manage member')
+            cmd.append('3')
             print('"3" Request advisor')
             if project.table[0]['stage'] == 'draft':
+                cmd.append('4')
                 print('"4" Submit project')
             elif project.table[0]['stage'] == 'accepted':
+                cmd.append('4')
                 print('"4" Submit Report')
+            cmd.append('5')
             print('"5" Delete project')
         elif project.table[0]['advisor'] == user['ID']:
+            cmd.append('5')
             print('"5" abandon your studetns')
         else:
             print('"1" Edit project data')
@@ -153,7 +162,7 @@ def edit_project(project_id):
         print('"back" to go back')
         print(line(len(string)))
         unip = uinput(string)
-        if project.table[0]['head'] != user['ID'] and unip in ['2' '3', '4'] and user['type'] != 'admin':
+        if unip not in cmd and user['type'] != 'admin':
             unip = 0
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
         match unip:
@@ -164,22 +173,38 @@ def edit_project(project_id):
                     project.upsert({'project_data': uinput('Enter new report_data: ')})
                 db.write('projects.csv')
             case '2':
-                print('Enter the ID of the person you would like to invite.')
                 db.select('persons',where={'type': 'student'}).select(['ID', 'fist', 'last']).print()
+                member1 = db.select('persons', where={'ID': project.table[0]['member1']})
+                if member1 is not None:
+                    print('project member 1: ' + member1.table[0]['fist'] + ' ' + member1.table[0]['last'])
+                member2 = db.select('persons', where={'ID': project.table[0]['member2']})
+                if member2 is not None:
+                    print('project member 2: ' + member2.table[0]['fist'] + ' ' + member2.table[0]['last'])
+                print('Enter the "fist" or "ID" of the person you would like to invite or remove.')
                 unip = uinput()
-                if db.select('persons', where={'ID': unip}) is not None:
-                    if project.table[0]['member2'] == '' or project.table[0]['member1'] == '':
-                        send_request(project, unip, 'member')
+                member_id = db.select('persons', where={'ID': unip}) or db.select('persons', where={'fist': unip})
+                if member_id is not None:
+                    if project.table[0]['member1'] == member_id.table[0]['ID']:
+                        project.upsert({'member1': None})
+                        uinput('member 1 removed.')
+                        db.write('projects.csv')
+                    elif project.table[0]['member2'] == member_id.table[0]['ID']:
+                        project.upsert({'member1': None})
+                        uinput('member 2 removed.')
+                        db.write('projects.csv')
+                    elif project.table[0]['member2'] == '' or project.table[0]['member1'] == '':
+                        send_request(project, member_id.table[0]['ID'], 'member')
                     else:
                         uinput('This project is full.')
                 else:
-                    uinput('Invalid ID.')
+                    uinput('Invalid ID or fist.')
             case '3':
-                print('Enter the ID of the person you would like to invite.')
+                print('Enter the "fist" or "ID" of the person you would like to invite.')
                 db.select('persons',where={'type': 'faculty'}).select(['ID', 'fist', 'last']).print()
                 unip = uinput()
-                if db.select('persons', where={'ID': unip}) is not None:
-                    send_request(project, unip, 'advisor')
+                advisor_id = db.select('persons', where={'ID': unip}) or db.select('persons', where={'fist': unip})
+                if advisor_id is not None:
+                    send_request(project, advisor_id.table[0]['ID'], 'advisor')
                 else:
                     uinput('Invalid ID.')
             case '4':
@@ -201,8 +226,8 @@ def edit_project(project_id):
                     db.write('projects.csv')
                     return None
                 project.select(['ID', 'name', 'project_data', 'stage']).print()
-                string = uinput('Are you sure you want to delete this project? enter the id of the project to confirm:')
-                if string == project.table[0]['ID']:
+                string = uinput('Are you sure you want to delete this project? enter the name of the project to confirm:')
+                if string == project.table[0]['name']:
                     db.select('projects').drop(where={'ID': project.table[0]['ID']})
                     db.write('projects.csv')
                     return None
@@ -278,8 +303,8 @@ def uinput(string = ''):
 def login():
     # ask the user to enter the username and password 3 times
     for _ in range(3):
-        username = input("Enter username: ")
-        password = input("Enter password: ")
+        username = uinput("Enter username: ")
+        password = uinput("Enter password: ")
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
         # check if the user id exists and the password matches
         if db.select('login', where={'username': username, 'password': password}) is not None:

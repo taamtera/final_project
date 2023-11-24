@@ -1,5 +1,25 @@
 # Project Management System Overview
 
+### Key Features
+
+- **Admin Mode:**
+  - Powerful tool for debugging
+  
+- **Easy Search:**
+  - Search data using Names or ID
+
+- **User Interface:**
+  - Simple console-based interface for ease of use.
+  
+- **Multiple Roles:**
+  - One person can assume many roles in different projects.
+  
+- **Multiple Users:**
+  - Supports real-time interactions for multiple users.
+
+- **Real DB**
+  - Realistic and scalable Database system for searching and filtering data
+
 ## User Roles
 
 ### Faculty
@@ -54,7 +74,7 @@
 ## Project Interactions
 
 - **Faculty:**
-  - View and manage projects they advise.
+  - View and manage projects advised by them.
   - Accept or decline project invitations from students.
   - Submit completed projects.
 
@@ -70,9 +90,63 @@
 - The system clears the screen for a cleaner interface.
 - Modified data is saved to CSV files after each operation.
 
-## Notes
+## Key Features
 
-- The program uses a console-based interface.
-- Actions may vary based on user roles (faculty, student, admin).
-- The system handles project requests, project creation, and user management.
-- Each user type has specific actions tailored to their role in the project management system.
+### User Roles and Actions
+
+- **Faculty:**
+  - View and manage own projects.
+  - Accept or decline project requests from students.
+  - Submit projects to the system.
+
+- **Student:**
+  - View and manage own projects.
+  - Request faculty advisor for a project.
+  - Accept or decline project invitations.
+  - Create new projects.
+
+- **Admin:**
+  - Edit database tables for system maintenance.
+  - Access admin mode to edit user information.
+
+### User Interactions
+
+- **Faculty:**
+  - Secure login with faculty ID and password.
+  - Main menu for viewing requests and managing projects.
+  - Option to accept or decline project requests.
+  - Ability to submit projects for review.
+  - Exit the system.
+
+- **Student:**
+  - Secure login with student ID and password.
+  - Main menu for viewing requests and managing projects.
+  - Option to request a faculty advisor.
+  - Ability to accept or decline project invitations.
+  - Option to create new projects.
+  - Exit the system.
+
+- **Admin:**
+  - Secure login with admin credentials.
+  - Admin mode for editing user information and performing maintenance.
+  - Ability to exit admin mode.
+
+### Project Interactions
+
+- **Faculty:**
+  - View and manage projects advised by them.
+  - Accept or decline project invitations from students.
+  - Submit completed projects.
+
+- **Student:**
+  - View and manage projects they are involved in.
+  - Request faculty advisors for their projects.
+  - Accept or decline invitations to join projects.
+  - Create new projects.
+
+### Notes
+
+- Actions are role-specific, providing a tailored experience for each user type.
+- System handles project requests, creation, and user management.
+- Program uses a console-based interface for simplicity and ease of use
+- Security could be improved (user role permission issues)
