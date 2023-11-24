@@ -1,4 +1,4 @@
-#  Project Evaluation : Project
+#  Project Evaluation : Student and Faculty
 
 ## Student's Actions
 
@@ -57,10 +57,7 @@
 - [ ] View and manage submitted reports.
 - [ ] Accept the submitted report if satisfactory.
 
----
-
 #  Project Evaluation : Admin
-
 
 ### 1. Login as Admin
 - [ ] Start by logging into the system using admin credentials.
@@ -101,8 +98,6 @@
 - Admins have the authority to modify user information, project details, and other relevant data.
 - The system will save changes to the respective CSV file automatically.
 - Ensure accuracy and caution when editing to maintain data integrity.
-
-**Note:**
 - Each action may involve interacting with the main menu, project details, and requests.
 - The system will automatically save modifications to the database after each action.
 - User roles and permissions may influence available actions.
