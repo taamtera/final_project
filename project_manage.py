@@ -35,9 +35,9 @@ def admin():
                     newtb = {}
                     for key in db.select(tb).table[0].keys():
                         if key != 'ID':
-                            newtb[key] = input('Enter ' + key + ': ')
+                            newtb[key] = uinput('Enter ' + key + ': ',False)
                         else:
-                            id = input('Enter ' + key + ' or leave blank for Random ID: ')
+                            id = uinput('Enter ' + key + ' or leave blank for Random ID: ',False)
                             newtb[key] = id or rnd_id()
                     db.select(tb).table.append(newtb)
                     db.write(tb + '.csv')
@@ -49,7 +49,7 @@ def admin():
                     print('leave blank to keep current value')
                     for key in entry.table[0].keys():
                         if key != 'ID':
-                            unip = input('Enter ' + key + ': ')
+                            unip = uinput('Enter ' + key + ': ', False)
                             if unip != '':
                                 entry.table[0][key] = unip
                     db.write(tb + '.csv')
@@ -295,8 +295,10 @@ def rnd_id():
 def line(leng):
     return ''.join(['-' for _ in range(leng)])
 
-def uinput(string = ''):
-    unip = input(string).lower()
+def uinput(string = '',lower = True):
+    unip = input(string)
+    if lower:
+        unip.lower()
     if unip == 'exit':
         exit()
     elif unip == 'logout':
@@ -307,13 +309,14 @@ def uinput(string = ''):
 def login():
     # ask the user to enter the username and password 3 times
     for _ in range(3):
-        username = uinput("Enter username: ")
-        password = uinput("Enter password: ")
-        os.system('cls' if os.name == 'nt' else "printf '\033c'")
+        print('--------Login--------')
+        username = uinput("username: ",False)
+        password = uinput("password: ",False)
         # check if the user id exists and the password matches
         if db.select('login', where={'username': username, 'password': password}) is not None:
             return db.select('login', where={'username': username, 'password': password}).table[0]['ID']
-        print('Login failed. Please try again.')
+        uinput('Login failed. Please try again.')
+        os.system('cls' if os.name == 'nt' else "printf '\033c'")
     uinput('You have exceeded the maximum number of tries. Please try again later.')
     exit()
     return None
@@ -339,7 +342,7 @@ def main():
     while True:
         initializing()
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
-        string = 'SKE-FP: V0.12 Welcome '+ user['type'] + " " + user['fist'] + ' ' + user['last'] + '. "exit" to exit. "logout" to relog'
+        string = 'SKE-FP: V0.13 | Welcome '+ user['type'] + " " + user['fist'] + ' ' + user['last'] + '. "exit" to exit. "logout" to relog'
         print( '\n' + line(len(string)))
         print(string)
         print(line(len(string)))
