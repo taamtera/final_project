@@ -3,7 +3,7 @@
 - Author: taamtera
 - Co-Author: Paruj Ratanaworabhan
 - License: KU
-- Version: V4.12
+- Version: V0.14
 
 - Program Overview:
     This program, named "SKE_FP_V4.12," is a project management system designed to facilitate the coordination and management of academic projects within a university setting. It provides functionalities for users with different roles such as administrators, faculty members, and students to interact with and manage project-related data.

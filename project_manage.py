@@ -37,8 +37,8 @@ def admin():
                         if key != 'ID':
                             newtb[key] = uinput('Enter ' + key + ': ',False)
                         else:
-                            id = uinput('Enter ' + key + ' or leave blank for Random ID: ',False)
-                            newtb[key] = id or rnd_id()
+                            rid = uinput('Enter ' + key + ' or leave blank for Random ID: ',False)
+                            newtb[key] = rid or rnd_id()
                     db.select(tb).table.append(newtb)
                     db.write(tb + '.csv')
                 elif unip == 'delete':
@@ -342,7 +342,7 @@ def main():
     while True:
         initializing()
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
-        string = 'SKE-FP: V0.13 | Welcome '+ user['type'] + " " + user['fist'] + ' ' + user['last'] + '. "exit" to exit. "logout" to relog'
+        string = 'SKE-FP: V0.14 | Welcome '+ user['type'] + " " + user['fist'] + ' ' + user['last'] + '. "exit" to exit. "logout" to relog'
         print( '\n' + line(len(string)))
         print(string)
         print(line(len(string)))
