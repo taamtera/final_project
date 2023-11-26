@@ -32,10 +32,14 @@ def admin():
                 if unip == 'back':
                     break
                 elif unip == 'new':
-                    db.select(tb).table.append({'ID': rnd_id()})
+                    newtb = {}
                     for key in db.select(tb).table[0].keys():
                         if key != 'ID':
-                            db.select(tb).table[0][key] = uinput('Enter ' + key + ': ')
+                            newtb[key] = input('Enter ' + key + ': ')
+                        else:
+                            id = input('Enter ' + key + ' or leave blank for Random ID: ')
+                            newtb[key] = id or rnd_id()
+                    db.select(tb).table.append(newtb)
                     db.write(tb + '.csv')
                 elif unip == 'delete':
                     db.select(tb).drop(where={'ID': uinput('Enter ID of entry to delete: ')})
@@ -45,7 +49,7 @@ def admin():
                     print('leave blank to keep current value')
                     for key in entry.table[0].keys():
                         if key != 'ID':
-                            unip = uinput('Enter ' + key + ': ')
+                            unip = input('Enter ' + key + ': ')
                             if unip != '':
                                 entry.table[0][key] = unip
                     db.write(tb + '.csv')
@@ -226,8 +230,8 @@ def edit_project(project_id):
                     db.write('projects.csv')
                     return None
                 project.select(['ID', 'name', 'project_data', 'stage']).print()
-                string = uinput('Are you sure you want to delete this project? enter the name of the project to confirm:')
-                if string == project.table[0]['name']:
+                string = uinput('Are you sure you want to delete this project? enter the "ID" of the project to confirm:')
+                if string == project.table[0]['ID']:
                     db.select('projects').drop(where={'ID': project.table[0]['ID']})
                     db.write('projects.csv')
                     return None
@@ -335,7 +339,7 @@ def main():
     while True:
         initializing()
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
-        string = 'Welcome '+ user['type'] + " " + user['fist'] + ' ' + user['last'] + '. "exit" to exit. "logout" to relog'
+        string = 'SKE-FP: V0.12 Welcome '+ user['type'] + " " + user['fist'] + ' ' + user['last'] + '. "exit" to exit. "logout" to relog'
         print( '\n' + line(len(string)))
         print(string)
         print(line(len(string)))
