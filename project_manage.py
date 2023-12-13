@@ -10,7 +10,7 @@ def initializing():
         .load('login.csv')\
         .load('projects.csv')\
         .load('requests.csv')\
-            
+    
 def admin():
     while True:
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
@@ -113,6 +113,7 @@ def get_project():
         create_project()
 
 def edit_project(project_id):
+    #  It just works (if it an't broke don't fix it)
     while True:
         db.load('projects.csv')
         project = db.select('projects', where={'ID': project_id.table[0]['ID']})
